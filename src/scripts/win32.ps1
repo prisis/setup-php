@@ -191,7 +191,7 @@ Function Add-Blackfire() {
   )
   $url = "https://packages.blackfire.io/binaries/blackfire-agent/${agent_version}/blackfire-agent-windows_${arch_name}.zip"
   Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $php_dir\blackfire.zip >$null 2>&1
-  7z e $php_dir\blackfire.zip -o"$php_dir" -y >$null 2>&1
+  Expand-Archive -Path $php_dir\blackfire.zip -DestinationPath $php_dir -Force > $null 2>&1
   Add-Content -Path $PsHome\profile.ps1 -Value "New-Alias blackfire $php_dir\blackfire.exe"
   Add-Content -Path $PsHome\profile.ps1 -Value "New-Alias blackfire-agent $php_dir\blackfire-agent.exe"
   if ((Test-Path env:BLACKFIRE_SERVER_ID) -and (Test-Path env:BLACKFIRE_SERVER_TOKEN)) {
@@ -214,8 +214,13 @@ $master_version = '8.0'
 $arch = 'x64'
 $arch_name='amd64'
 $ts = $false
+
 if((Test-Path env:PHPTS) -and $env:PHPTS -eq 'ts') {
   $ts = $true
+}
+if((Test-Path env:RUNNER) -and $env:RUNNER -eq 'self-hosted' -and $version -lt 5.6) {
+    Add-Log $cross "PHP" "PHP $version is not supported on self-hosted runner"
+    exit 1
 }
 
 Step-Log "Setup PhpManager"
