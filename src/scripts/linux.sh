@@ -19,7 +19,7 @@ add_log() {
 # Function to update php ppa
 update_ppa() {
   if [ "$ppa_updated" = "false" ]; then
-    sudo "$debconf_fix" apt-get update >/dev/null 2>&1
+    sudo "$debconf_fix" apt-get update 
     ppa_updated="true"
   fi
 }
@@ -27,11 +27,11 @@ update_ppa() {
 # Function to configure PECL
 configure_pecl() {
   if [ "$pecl_config" = "false" ] && [ -e /usr/bin/pecl ]; then
-    sudo touch "$scan_dir"/99-pecl.ini >/dev/null 2>&1
+    sudo touch "$scan_dir"/99-pecl.ini 
     for tool in pear pecl; do
-      sudo "$tool" config-set php_ini "$scan_dir"/99-pecl.ini >/dev/null 2>&1
-      sudo "$tool" config-set auto_discover 1 >/dev/null 2>&1
-      sudo "$tool" channel-update "$tool".php.net >/dev/null 2>&1
+      sudo "$tool" config-set php_ini "$scan_dir"/99-pecl.ini 
+      sudo "$tool" config-set auto_discover 1 
+      sudo "$tool" channel-update "$tool".php.net 
     done
     pecl_config="true"
   fi
@@ -64,8 +64,8 @@ check_extension() {
 delete_extension() {
   extension=$1
   sudo sed -i "/$extension/d" "$ini_file"
-  sudo rm -rf "$scan_dir"/*"$extension"* >/dev/null 2>&1
-  sudo rm -rf "$ext_dir"/"$extension".so >/dev/null 2>&1
+  sudo rm -rf "$scan_dir"/*"$extension"* 
+  sudo rm -rf "$ext_dir"/"$extension".so 
 }
 
 # Function to disable and delete extensions
@@ -91,12 +91,12 @@ add_pdo_extension() {
     add_log "$tick" "$pdo_ext" "Enabled"
   else
     read -r ext ext_name <<< "$1 $1"
-    sudo rm -rf "$scan_dir"/*pdo.ini >/dev/null 2>&1 && enable_extension "pdo" "extension" >/dev/null 2>&1
+    sudo rm -rf "$scan_dir"/*pdo.ini  && enable_extension "pdo" "extension" 
     if [ "$ext" = "mysql" ]; then
       enable_extension "mysqlnd" "extension"
       ext_name="mysqli"
     fi
-    add_extension "$ext_name" "$apt_install php$version-$ext" "extension" >/dev/null 2>&1
+    add_extension "$ext_name" "$apt_install php$version-$ext" "extension" 
     enable_extension "$pdo_ext" "extension"
     (check_extension "$pdo_ext" && add_log "$tick" "$pdo_ext" "Enabled") ||
     add_log "$cross" "$pdo_ext" "Could not install $pdo_ext on PHP $semver"
@@ -115,9 +115,9 @@ add_extension() {
   if check_extension "$extension"; then
     add_log "$tick" "$extension" "Enabled"
   else
-    eval "$install_command" >/dev/null 2>&1 ||
-    (update_ppa && eval "$install_command" >/dev/null 2>&1) ||
-    sudo pecl install -f "$extension" >/dev/null 2>&1
+    eval "$install_command"  ||
+    (update_ppa && eval "$install_command" ) ||
+    sudo pecl install -f "$extension" 
     (check_extension "$extension" && add_log "$tick" "$extension" "Installed and enabled") ||
     add_log "$cross" "$extension" "Could not install $extension on PHP $semver"
   fi
@@ -138,7 +138,7 @@ add_pecl_extension() {
   else
     delete_extension "$extension"
     (
-      sudo pecl install -f "$extension-$pecl_version" >/dev/null 2>&1 &&
+      sudo pecl install -f "$extension-$pecl_version"  &&
       check_extension "$extension" &&
       add_log "$tick" "$extension" "Installed and enabled"
     ) || add_log "$cross" "$extension" "Could not install $extension-$pecl_version on PHP $semver"
@@ -188,9 +188,9 @@ add_tool() {
     elif [ "$tool" = "cs2pr" ]; then
       sudo sed -i 's/\r$//; s/exit(9)/exit(0)/' "$tool_path"
     elif [ "$tool" = "phive" ]; then
-      add_extension curl "$apt_install php$version-curl" extension >/dev/null 2>&1
-      add_extension mbstring "$apt_install php$version-mbstring" extension >/dev/null 2>&1
-      add_extension xml "$apt_install php$version-xml" extension >/dev/null 2>&1
+      add_extension curl "$apt_install php$version-curl" extension 
+      add_extension mbstring "$apt_install php$version-mbstring" extension 
+      add_extension xml "$apt_install php$version-xml" extension 
     elif [ "$tool" = "wp-cli" ]; then
       sudo cp -p "$tool_path" "$tool_path_dir"/wp
     fi
@@ -206,7 +206,7 @@ add_composertool() {
   release=$2
   prefix=$3
   (
-    composer global require "$prefix$release" >/dev/null 2>&1 &&
+    composer global require "$prefix$release"  &&
     sudo ln -sf "$(composer -q global config home)"/vendor/bin/"$tool" /usr/local/bin/"$tool" &&
     add_log "$tick" "$tool" "Added"
   ) || add_log "$cross" "$tool" "Could not setup $tool"
@@ -215,23 +215,23 @@ add_composertool() {
 # Function to setup phpize and php-config
 add_devtools() {
   if ! [ -e "/usr/bin/phpize$version" ] || ! [ -e "/usr/bin/php-config$version" ]; then
-    $apt_install php"$version"-dev php"$version"-xml >/dev/null 2>&1
+    $apt_install php"$version"-dev php"$version"-xml 
   fi
-  sudo update-alternatives --set php-config /usr/bin/php-config"$version" >/dev/null 2>&1
-  sudo update-alternatives --set phpize /usr/bin/phpize"$version" >/dev/null 2>&1
+  sudo update-alternatives --set php-config /usr/bin/php-config"$version" 
+  sudo update-alternatives --set phpize /usr/bin/phpize"$version" 
   configure_pecl
 }
 
 add_blackfire() {
   sudo mkdir -p /var/run/blackfire
-  sudo curl -o /tmp/blackfire-gpg.key -sSL https://packages.blackfire.io/gpg.key >/dev/null 2>&1
-  sudo apt-key add /tmp/blackfire-gpg.key >/dev/null 2>&1
-  echo "deb http://packages.blackfire.io/debian any main" | sudo tee /etc/apt/sources.list.d/blackfire.list >/dev/null 2>&1
-  find /etc/apt/sources.list.d -type f -name blackfire.list -exec sudo "$debconf_fix" apt-fast update -o Dir::Etc::sourcelist="{}" ';' >/dev/null 2>&1
-  $apt_install blackfire-agent >/dev/null 2>&1
-  sudo blackfire-agent --register --server-id="$BLACKFIRE_SERVER_ID" --server-token="$BLACKFIRE_SERVER_TOKEN" >/dev/null 2>&1
-  sudo /etc/init.d/blackfire-agent restart >/dev/null 2>&1
-  sudo blackfire --config --client-id="$BLACKFIRE_CLIENT_ID" --client-token="$BLACKFIRE_CLIENT_TOKEN" >/dev/null 2>&1
+  sudo curl -o /tmp/blackfire-gpg.key -sSL https://packages.blackfire.io/gpg.key 
+  sudo apt-key add /tmp/blackfire-gpg.key 
+  echo "deb http://packages.blackfire.io/debian any main" | sudo tee /etc/apt/sources.list.d/blackfire.list 
+  find /etc/apt/sources.list.d -type f -name blackfire.list -exec sudo "$debconf_fix" apt-fast update -o Dir::Etc::sourcelist="{}" ';' 
+  $apt_install blackfire-agent 
+  sudo blackfire-agent --register --server-id="$BLACKFIRE_SERVER_ID" --server-token="$BLACKFIRE_SERVER_TOKEN" 
+  sudo /etc/init.d/blackfire-agent restart 
+  sudo blackfire --config --client-id="$BLACKFIRE_CLIENT_ID" --client-token="$BLACKFIRE_CLIENT_TOKEN" 
   add_log "$tick" "blackfire" "Added"
   add_log "$tick" "blackfire-agent" "Added"
 }
@@ -266,7 +266,7 @@ setup_old_versions() {
 add_pecl() {
   add_devtools
   if [ ! -e /usr/bin/pecl ]; then
-    $apt_install php-pear >/dev/null 2>&1
+    $apt_install php-pear 
   fi
   configure_pecl
   add_log "$tick" "PECL" "Added"
@@ -276,7 +276,7 @@ add_pecl() {
 switch_version() {
   for tool in pear pecl php phar phar.phar php-cgi php-config phpize phpdbg; do
     if [ -e "/usr/bin/$tool$version" ]; then
-      sudo update-alternatives --set $tool /usr/bin/"$tool$version" >/dev/null 2>&1
+      sudo update-alternatives --set $tool /usr/bin/"$tool$version" 
     fi
   done
 }
@@ -294,7 +294,7 @@ php_semver() {
 update_php() {
   update_ppa
   initial_version=$(php_semver)
-  $apt_install php"$version" php"$version"-curl php"$version"-mbstring php"$version"-xml >/dev/null 2>&1
+  $apt_install php"$version" php"$version"-curl php"$version"-mbstring php"$version"-xml 
   updated_version=$(php_semver)
   if [ "$updated_version" != "$initial_version" ]; then
     status="Updated to"
@@ -323,12 +323,12 @@ sudo mkdir -p /var/run /run/php
 if [ "$existing_version" != "$version" ]; then
   if [ ! -e "/usr/bin/php$version" ]; then
     if [ "$version" = "8.0" ]; then
-      setup_master >/dev/null 2>&1
+      setup_master 
     elif [[ "$version" =~ $old_versions ]] || [ "$version" = "5.3" ]; then
-      setup_old_versions >/dev/null 2>&1
+      setup_old_versions 
     else
       update_ppa
-      $apt_install php"$version" php"$version"-curl php"$version"-mbstring php"$version"-xml >/dev/null 2>&1
+      $apt_install php"$version" php"$version"-curl php"$version"-mbstring php"$version"-xml 
     fi
     status="Installed"
   else

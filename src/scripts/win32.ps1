@@ -115,7 +115,7 @@ Function Add-Tool() {
   }
   if ($tool -eq "symfony") {
     Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $php_dir\$tool.exe
-    Add-Content -Path $PsHome\profile.ps1 -Value "New-Alias $tool $php_dir\$tool.exe" >$null 2>&1
+    Add-Content -Path $PsHome\profile.ps1 -Value "New-Alias $tool $php_dir\$tool.exe" 
   } else {
     try {
       Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $php_dir\$tool
@@ -125,13 +125,13 @@ Function Add-Tool() {
       $bat_content += "SET BIN_TARGET=%~dp0/" + $tool
       $bat_content += "php %BIN_TARGET% %*"
       Set-Content -Path $php_dir\$tool.bat -Value $bat_content
-      Add-Content -Path $PsHome\profile.ps1 -Value "New-Alias $tool $php_dir\$tool.bat" >$null 2>&1
+      Add-Content -Path $PsHome\profile.ps1 -Value "New-Alias $tool $php_dir\$tool.bat" 
     } catch { }
   }
   if($tool -eq "phive") {
-    Add-Extension curl >$null 2>&1
-    Add-Extension mbstring >$null 2>&1
-    Add-Extension xml >$null 2>&1
+    Add-Extension curl 
+    Add-Extension mbstring 
+    Add-Extension xml 
   } elseif($tool -eq "cs2pr") {
     (Get-Content $php_dir/cs2pr).replace('exit(9)', 'exit(0)') | Set-Content $php_dir/cs2pr
   } elseif($tool -eq "composer") {
@@ -190,15 +190,15 @@ Function Add-Blackfire() {
     $agent_version
   )
   $url = "https://packages.blackfire.io/binaries/blackfire-agent/${agent_version}/blackfire-agent-windows_${arch_name}.zip"
-  Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $php_dir\blackfire.zip >$null 2>&1
-  7z e $php_dir\blackfire.zip -o"$php_dir" -y >$null 2>&1
+  Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $php_dir\blackfire.zip 
+  7z e $php_dir\blackfire.zip -o"$php_dir" -y 
   Add-Content -Path $PsHome\profile.ps1 -Value "New-Alias blackfire $php_dir\blackfire.exe"
   Add-Content -Path $PsHome\profile.ps1 -Value "New-Alias blackfire-agent $php_dir\blackfire-agent.exe"
   if ((Test-Path env:BLACKFIRE_SERVER_ID) -and (Test-Path env:BLACKFIRE_SERVER_TOKEN)) {
-    blackfire-agent --register --server-id=$env:BLACKFIRE_SERVER_ID --server-token=$env:BLACKFIRE_SERVER_TOKEN >$null 2>&1
+    blackfire-agent --register --server-id=$env:BLACKFIRE_SERVER_ID --server-token=$env:BLACKFIRE_SERVER_TOKEN 
   }
   if ((Test-Path env:BLACKFIRE_CLIENT_ID) -and (Test-Path env:BLACKFIRE_CLIENT_TOKEN)) {
-    blackfire --config --client-id=$env:BLACKFIRE_CLIENT_ID --client-token=$env:BLACKFIRE_CLIENT_TOKEN --ca-cert=$php_dir\ssl\cacert.pem >$null 2>&1
+    blackfire --config --client-id=$env:BLACKFIRE_CLIENT_ID --client-token=$env:BLACKFIRE_CLIENT_TOKEN --ca-cert=$php_dir\ssl\cacert.pem 
   }
   Add-Log $tick "blackfire" "Added"
   Add-Log $tick "blackfire-agent" "Added"
@@ -219,7 +219,7 @@ if((Test-Path env:PHPTS) -and $env:PHPTS -eq 'ts') {
 }
 
 Step-Log "Setup PhpManager"
-Install-PhpManager >$null 2>&1
+Install-PhpManager 
 Add-Log $tick "PhpManager" "Installed"
 
 $installed = $null
@@ -242,10 +242,10 @@ if ($null -eq $installed -or -not("$($installed.Version).".StartsWith(($version 
     $version = 'master'
   }
 
-  Install-Php -Version $version -Architecture $arch -ThreadSafe $ts -InstallVC -Path $php_dir -TimeZone UTC -InitialPhpIni Production -Force >$null 2>&1
+  Install-Php -Version $version -Architecture $arch -ThreadSafe $ts -InstallVC -Path $php_dir -TimeZone UTC -InitialPhpIni Production -Force 
 } else {
   if((Test-Path env:update) -and $env:update -eq 'true') {
-    Update-Php $php_dir >$null 2>&1
+    Update-Php $php_dir 
     $status = "Updated to"
   } else {
     $status = "Found"
@@ -255,8 +255,8 @@ if ($null -eq $installed -or -not("$($installed.Version).".StartsWith(($version 
 $installed = Get-Php -Path $php_dir
 Set-PhpIniKey -Key 'date.timezone' -Value 'UTC' -Path $php_dir
 if($version -lt "5.5") {
-  Add-Extension openssl >$null 2>&1
-  Add-Extension curl >$null 2>&1
+  Add-Extension openssl 
+  Add-Extension curl 
 } else {
   Enable-PhpExtension -Extension openssl, curl, opcache -Path $php_dir
 }
