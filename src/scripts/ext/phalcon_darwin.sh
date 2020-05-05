@@ -13,10 +13,10 @@ add_log() {
 # Function to install phalcon
 install_phalcon() {
   (
-    brew tap shivammathur/homebrew-phalcon >/dev/null 2>&1
-    brew install phalcon@"$php_version"_"$extension_major" >/dev/null 2>&1
-    sudo cp /usr/local/opt/psr@"$php_version"/psr.so "$ext_dir" >/dev/null 2>&1
-    sudo cp /usr/local/opt/phalcon@"$php_version"_"$extension_major"/phalcon.so "$ext_dir" >/dev/null 2>&1
+    brew tap shivammathur/homebrew-phalcon 
+    brew install phalcon@"$php_version"_"$extension_major" 
+    sudo cp /usr/local/opt/psr@"$php_version"/psr.so "$ext_dir" 
+    sudo cp /usr/local/opt/phalcon@"$php_version"_"$extension_major"/phalcon.so "$ext_dir" 
     add_log "$tick" "$extension" "Installed and enabled"
   ) || add_log "$cross" "$extension" "Could not install $extension on PHP $semver"
 }

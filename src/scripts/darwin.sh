@@ -20,8 +20,8 @@ add_log() {
 remove_extension() {
   extension=$1
   sudo sed -i '' "/$extension/d" "$ini_file"
-  sudo rm -rf "$scan_dir"/*"$extension"* >/dev/null 2>&1
-  sudo rm -rf "$ext_dir"/"$extension".so >/dev/null 2>&1
+  sudo rm -rf "$scan_dir"/*"$extension"* 
+  sudo rm -rf "$ext_dir"/"$extension".so 
 }
 
 # Function to test if extension is loaded
@@ -61,7 +61,7 @@ add_pecl_extension() {
   else
     remove_extension "$extension"
     (
-      sudo pecl install -f "$extension-$pecl_version" >/dev/null 2>&1 &&
+      sudo pecl install -f "$extension-$pecl_version"  &&
       check_extension "$extension" &&
       add_log "$tick" "$extension" "Installed and enabled"
     ) || add_log "$cross" "$extension" "Could not install $extension-$pecl_version on PHP $semver"
@@ -79,7 +79,7 @@ add_extension() {
     add_log "$tick" "$extension" "Enabled"
   elif ! check_extension "$extension"; then
     (
-      eval "$install_command" >/dev/null 2>&1 &&
+      eval "$install_command"  &&
       check_extension "$extension" &&
       add_log "$tick" "$extension" "Installed and enabled"
     ) || add_log "$cross" "$extension" "Could not install $extension on PHP $semver"
@@ -108,12 +108,12 @@ add_tool() {
   if [ "$status_code" = "200" ]; then
     sudo chmod a+x "$tool_path"
     if [ "$tool" = "phive" ]; then
-      add_extension curl "sudo pecl install -f curl" extension >/dev/null 2>&1
-      add_extension mbstring "sudo pecl install -f mbstring" extension >/dev/null 2>&1
-      add_extension xml "sudo pecl install -f xml" extension >/dev/null 2>&1
+      add_extension curl "sudo pecl install -f curl" extension 
+      add_extension mbstring "sudo pecl install -f mbstring" extension 
+      add_extension xml "sudo pecl install -f xml" extension 
     elif [ "$tool" = "cs2pr" ]; then
       sudo sed -i '' 's/exit(9)/exit(0)/' "$tool_path"
-      tr -d '\r' < "$tool_path" | sudo tee "$tool_path.tmp" >/dev/null 2>&1 && sudo mv "$tool_path.tmp" "$tool_path"
+      tr -d '\r' < "$tool_path" | sudo tee "$tool_path.tmp"  && sudo mv "$tool_path.tmp" "$tool_path"
       sudo chmod a+x "$tool_path"
     fi
     add_log "$tick" "$tool" "Added"
@@ -128,7 +128,7 @@ add_composertool() {
   release=$2
   prefix=$3
   (
-    composer global require "$prefix$release" >/dev/null 2>&1 &&
+    composer global require "$prefix$release"  &&
     sudo ln -sf "$(composer -q global config home)"/vendor/bin/"$tool" /usr/local/bin/"$tool" &&
     add_log "$tick" "$tool" "Added"
   ) || add_log "$cross" "$tool" "Could not setup $tool"
@@ -137,9 +137,9 @@ add_composertool() {
 # Function to configure PECL
 configure_pecl() {
   for tool in pear pecl; do
-    sudo "$tool" config-set php_ini "$ini_file" >/dev/null 2>&1
-    sudo "$tool" config-set auto_discover 1 >/dev/null 2>&1
-    sudo "$tool" channel-update "$tool".php.net >/dev/null 2>&1
+    sudo "$tool" config-set php_ini "$ini_file" 
+    sudo "$tool" config-set auto_discover 1 
+    sudo "$tool" channel-update "$tool".php.net 
   done
 }
 
@@ -182,7 +182,7 @@ existing_version=$(php-config --version | cut -c 1-3)
 # Setup PHP
 step_log "Setup PHP"
 if [ "$existing_version" != "$version" ]; then
-  setup_php >/dev/null 2>&1
+  setup_php 
   status="Installed"
 else
   status="Found"
