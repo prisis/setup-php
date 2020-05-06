@@ -356,7 +356,7 @@ if [ "$existing_version" != "$version" ]; then
       setup_old_versions >/dev/null 2>&1
     else
       update_ppa
-      $apt_install php"$version" php"$version"-curl php"$version"-mbstring php"$version"-xml >/dev/null 2>&1
+      $apt_install php"$version" php"$version"-curl php"$version"-mbstring php"$version"-xml php"$version"-intl >/dev/null 2>&1
     fi
     status="Installed"
   else
