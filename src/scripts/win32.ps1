@@ -129,8 +129,6 @@ Function Add-Tool() {
     } catch { }
   }
   if($tool -eq "phive") {
-    Add-Extension curl >$null 2>&1
-    Add-Extension mbstring >$null 2>&1
     Add-Extension xml >$null 2>&1
   } elseif($tool -eq "cs2pr") {
     (Get-Content $php_dir/cs2pr).replace('exit(9)', 'exit(0)') | Set-Content $php_dir/cs2pr
@@ -261,8 +259,9 @@ Set-PhpIniKey -Key 'date.timezone' -Value 'UTC' -Path $php_dir
 if($version -lt "5.5") {
   Add-Extension openssl >$null 2>&1
   Add-Extension curl >$null 2>&1
+  Add-Extension mbstring >$null 2>&1
 } else {
-  Enable-PhpExtension -Extension openssl, curl, opcache -Path $php_dir
+  Enable-PhpExtension -Extension openssl, curl, opcache, mbstring -Path $php_dir
 }
 Update-PhpCAInfo -Path $php_dir -Source CurrentUser
 if ($version -eq 'master') {
